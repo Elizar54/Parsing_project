@@ -32,15 +32,14 @@ while True:
     list_of_indexes = indexing(grid_catalog_count)
 
     list_of_items_coded = []
-    for k in range(len(list_of_indexes) - 1):
-        list_of_items_coded.append(html_text[list_of_indexes[k]: list_of_indexes[k+1]])
+    for index in range(len(list_of_indexes) - 1):
+        list_of_items_coded.append(html_text[list_of_indexes[index]: list_of_indexes[index+1]])
     list_of_items_coded.append(html_text[list_of_indexes[-1]:])
-
     
-
     for part_of_code in list_of_items_coded:
         link = ''
         a_href = part_of_code.find('<a href="')
+
         for symbol in part_of_code[a_href + 9:]:
             if symbol != '"':
                 link += symbol
@@ -51,6 +50,7 @@ while True:
 # здесь начну код по парсингу теперь уже карточек товаров
 url_general = 'https://www.lamoda.ru'
 df_python = []
+
 for link in list_of_links:
     url_item = url_general + link
     response = requests.get(url_item)
@@ -77,13 +77,13 @@ for link in list_of_links:
         price = int(float(dict_data['offers']['price']))
 
         vendor_code = dict_data['offers']['sku']
+        
     except:
         brand = None
         name = None
         price = -1
         vendor_code = None
 
-# теперь парсим страну-производителя, здесь парсер абсолютно конченый
     item_html_country = response.text
     item_html_country = item_html_country[item_html_country.find('<div id="modals">'):]
     item_html_country = item_html_country[item_html_country.find('<script>'):]
@@ -100,6 +100,7 @@ for link in list_of_links:
     item_html_discount = item_html_discount[item_html_discount.find('content'):]
     item_html_discount = item_html_discount[item_html_discount.find('"') + 1:]
     item_html_discount = item_html_discount[0: item_html_discount.find('"')]
+
     try:
         price_without_discount = int(float(item_html_discount))
         discount = '{:.0%}'.format(1 - price / price_without_discount)
