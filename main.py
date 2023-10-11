@@ -23,9 +23,6 @@ while True:
     params_to_get = {'q': text, 'page': number_of_page}
     response = requests.get(url_search, params=params_to_get)
     html_text = response.text
-    print(response.url)
-
-    print(len(html_text))   # 617962 символов
 
     grid_catalog_index = html_text.find('<div class="grid__catalog">')
     if grid_catalog_index == -1:
@@ -33,15 +30,13 @@ while True:
     html_text = html_text[grid_catalog_index:]  # урежем html-страницу, отбросив все до начала каталога товаров
     grid_catalog_count = html_text.count('<div class="x-product-card__card"')   # количество товаров в каталоге на стр.
     list_of_indexes = indexing(grid_catalog_count)
-    print(html_text.find('"/p/rtlacv440501/shoes-reebok-kedy/"'))
-    print(list_of_indexes)
 
     list_of_items_coded = []
     for k in range(len(list_of_indexes) - 1):
         list_of_items_coded.append(html_text[list_of_indexes[k]: list_of_indexes[k+1]])
     list_of_items_coded.append(html_text[list_of_indexes[-1]:])
 
-    print(len(list_of_items_coded))
+    
 
     for part_of_code in list_of_items_coded:
         link = ''
@@ -52,9 +47,6 @@ while True:
             else:
                 list_of_links.append(link)
                 break
-
-print(list_of_links)
-print(len(list_of_links))
 
 # здесь начну код по парсингу теперь уже карточек товаров
 url_general = 'https://www.lamoda.ru'
@@ -117,4 +109,7 @@ for link in list_of_links:
     df_python.append([vendor_code, brand, name, price, discount, country])
 
 df = pd.DataFrame(data=df_python, columns=['vendor_code', 'brand', 'model', 'price', 'discount', 'country'])
+df = df.sort_values(by='price', ascending=True)
+df = df[df.price != -1]
+
 df.to_excel(r'lamoda.xlsx', index=False)
