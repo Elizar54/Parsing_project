@@ -46,6 +46,7 @@ while True:
             else:
                 list_of_links.append(link)
                 break
+print('Ссылки на карточки товаров нафармлены, теперь ожидайте появления файла lamoda.xlsx в папке с проектом')
 
 # здесь начну код по парсингу теперь уже карточек товаров
 url_general = 'https://www.lamoda.ru'
@@ -84,6 +85,7 @@ for link in list_of_links:
         price = -1
         vendor_code = None
 
+# парсим страну производства - для этой части кода не выявлено товаров, заставивших бы код упасть с ошибкой
     item_html_country = response.text
     item_html_country = item_html_country[item_html_country.find('<div id="modals">'):]
     item_html_country = item_html_country[item_html_country.find('<script>'):]
@@ -95,22 +97,26 @@ for link in list_of_links:
     country = item_html_country.strip('"')
 
 # парсим цену без скидки (для товаров без акций получится обычная цена) и определяем саму скидку
-    item_html_discount = response.text
-    item_html_discount = item_html_discount[item_html_discount.find('span class="x-premium-product-prices__price "'):]
-    item_html_discount = item_html_discount[item_html_discount.find('content'):]
-    item_html_discount = item_html_discount[item_html_discount.find('"') + 1:]
-    item_html_discount = item_html_discount[0: item_html_discount.find('"')]
-
     try:
+        item_html_discount = response.text
+        item_html_discount = item_html_discount[item_html_discount.find('span class="x-premium-product-prices__price "'):]
+        item_html_discount = item_html_discount[item_html_discount.find('content'):]
+        item_html_discount = item_html_discount[item_html_discount.find('"') + 1:]
+        item_html_discount = item_html_discount[0: item_html_discount.find('"')]
+
         price_without_discount = int(float(item_html_discount))
         discount = '{:.0%}'.format(1 - price / price_without_discount)
     except:
-        discount = None
+        discount = 'Нет в наличии'
+        price = 'Нет в наличии'
 
     df_python.append([vendor_code, brand, name, price, discount, country])
 
 df = pd.DataFrame(data=df_python, columns=['vendor_code', 'brand', 'model', 'price', 'discount', 'country'])
-df = df.sort_values(by='price', ascending=True)
-df = df[df.price != -1]
+df_available = df[df['price'] != 'Нет в наличии']
+df_available = df_available.sort_values(by='price', ascending=True)
+df_not_available = df[df['price'] == 'Нет в наличии']
+df = pd.concat([df_available, df_not_available]).reset_index(drop=True)
+df = df[df['price'] != -1]
 
 df.to_excel(r'lamoda.xlsx', index=False)
