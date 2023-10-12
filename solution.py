@@ -78,12 +78,15 @@ for link in list_of_links:
         price = int(float(dict_data['offers']['price']))
 
         vendor_code = dict_data['offers']['sku']
+
+        discount = 'Строка, которую мы никогда не увидим'
         
     except:
         brand = None
         name = None
         price = -1
         vendor_code = None
+        discount = None
 
 # парсим страну производства - для этой части кода не выявлено товаров, заставивших бы код упасть с ошибкой
     item_html_country = response.text
@@ -105,18 +108,23 @@ for link in list_of_links:
         item_html_discount = item_html_discount[0: item_html_discount.find('"')]
 
         price_without_discount = int(float(item_html_discount))
-        discount = '{:.0%}'.format(1 - price / price_without_discount)
+        if discount != None:
+            discount = '{:.0%}'.format(1 - price / price_without_discount)
     except:
         discount = 'Нет в наличии'
         price = 'Нет в наличии'
 
-    df_python.append([vendor_code, brand, name, price, discount, country])
+    df_python.append([vendor_code, brand, name, price, discount, country, url_item])
 
-df = pd.DataFrame(data=df_python, columns=['vendor_code', 'brand', 'model', 'price', 'discount', 'country'])
+df = pd.DataFrame(data=df_python, columns=['vendor_code', 'brand', 'model', 'price', 'discount', 'country', 'link'])
 df_available = df[df['price'] != 'Нет в наличии']
 df_available = df_available.sort_values(by='price', ascending=True)
 df_not_available = df[df['price'] == 'Нет в наличии']
 df = pd.concat([df_available, df_not_available]).reset_index(drop=True)
-df = df[df['price'] != -1]
+df_complete = df[df['price'] != -1]
+df_complete = df_complete[['vendor_code', 'brand', 'model', 'price', 'discount', 'country']]
+df_incomplete = df[df['price'] == -1]
 
-df.to_excel(r'lamoda.xlsx', index=False)
+with pd.ExcelWriter('lamoda.xlsx') as writer:
+    df_complete.to_excel(writer, sheet_name='Полные данные', index=False)
+    df_incomplete.to_excel(writer, sheet_name='Неполные данные', index=False)
