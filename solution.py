@@ -1,3 +1,8 @@
+'''
+Leonov Kirill - 80
+Elizarev Yaroslav - 50
+'''
+
 import requests
 import json
 import pandas as pd
@@ -81,7 +86,7 @@ for link in list_of_links:
 
         discount = 'Строка, которую мы никогда не увидим'
         
-    except:
+    except json.JSONDecodeError:
         brand = None
         name = None
         price = -1
@@ -102,15 +107,16 @@ for link in list_of_links:
 # парсим цену без скидки (для товаров без акций получится обычная цена) и определяем саму скидку
     try:
         item_html_discount = response.text
-        item_html_discount = item_html_discount[item_html_discount.find('span class="x-premium-product-prices__price "'):]
+        span_class_index = item_html_discount.find('span class="x-premium-product-prices__price "')
+        item_html_discount = item_html_discount[span_class_index:]
         item_html_discount = item_html_discount[item_html_discount.find('content'):]
         item_html_discount = item_html_discount[item_html_discount.find('"') + 1:]
         item_html_discount = item_html_discount[0: item_html_discount.find('"')]
 
         price_without_discount = int(float(item_html_discount))
-        if discount != None:
+        if discount is not None:
             discount = '{:.0%}'.format(1 - price / price_without_discount)
-    except:
+    except ValueError:
         discount = 'Нет в наличии'
         price = 'Нет в наличии'
 
