@@ -52,6 +52,7 @@ while True:
                 list_of_links.append(link)
                 break
 print('Ссылки на карточки товаров нафармлены, теперь ожидайте появления файла lamoda.xlsx в папке с проектом')
+print(f'Количество найденных товаров по запросу: {len(list_of_links)}')
 
 # здесь начну код по парсингу теперь уже карточек товаров
 url_general = 'https://www.lamoda.ru'
